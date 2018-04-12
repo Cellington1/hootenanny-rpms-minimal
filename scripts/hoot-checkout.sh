@@ -27,7 +27,7 @@ popd
 
 sed -i 's$editor-layer-index@git://github.com/osmlab/editor-layer-index.git$editor-layer-index@https://github.com/Cellington1/osmlab-editor-layer.git$g' /root/hootenanny/hoot-ui/Makefile
 
-sed -i 's$editor-layer-index@git://github.com/osmlab/osmlab-name-suggestion-index.git$editor-layer-index@https://github.com/Cellington1/osmlab-name-suggestion-index.git$g' /root/hootenanny/hoot-ui/Makefile
+sed -i 's$git://github.com/osmlab/name-suggestion-index.git$https://github.com/Cellington1/osmlab-name-suggestion-index.git$g' /root/hootenanny/hoot-ui/Makefile
 
 
 sed -i 's$git://github.com/osmlab/editor-layer-index.git$https://github.com/Cellington1/osmlab-editor-layer.git$g' /root/hootenanny/hoot-ui/package.json
