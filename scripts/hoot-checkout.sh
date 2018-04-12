@@ -29,3 +29,4 @@ sed -i 's/editor-layer-index@git/editor-layer-index@git+https/g' /root/hootenann
 
 sed -i 's/name-suggestion-index@git/name-suggestion-index@git+https/g' /root/hootenanny/hoot-ui/Makefile
 
+sed -i 's$git://github.com/osmlab$git+https://github.com/osmlab$g' /root/hootenanny/hoot-ui/package.json
