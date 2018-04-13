@@ -4,5 +4,7 @@ set -euo pipefail
 # Start PostgreSQL, suppressing output.
 su-exec postgres pg_ctl -D $PGDATA -s start &> /dev/null
 
+git config --global url."https://".insteadOf git://
+
 # Start desired command as the unprivileged build user.
 exec su-exec $RPMBUILD_USER "$@"

@@ -17,8 +17,12 @@ ARG pg_data=/var/lib/pgsql/${pg_version}/data
 # Have PostgreSQL data directory persist in environment variable.
 ENV PGDATA=${pg_data}
 
+RUN git config --global url."https://".insteadOf git://
 # Switch back to root.
 USER root
+
+RUN git config --global url."https://".insteadOf git://
+
 
 # Install Hootenanny release repository, NodeJS and pin to desired version.
 COPY scripts/hoot-repo.sh scripts/nodejs-install.sh /tmp/

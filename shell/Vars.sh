@@ -286,7 +286,8 @@ function run_hoot_build_image() {
                --entrypoint $entrypoint \
 	       -u $user \
 	       -i --rm \
-               $image "${@:-/bin/bash}"
+               $image "${@:-/bin/bash}" 
+              
     fi
 
 
