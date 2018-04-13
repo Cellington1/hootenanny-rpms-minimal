@@ -8,7 +8,7 @@ set -u
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/Vars.sh
 
 # The container used to build Hootenanny archive.
-BUILD_IMAGE=${BUILD_IMAGE:-hootenanny/rpmbuild-hoot-release}
+BUILD_IMAGE=${BUILD_IMAGE:-cellington1/rpmbuild-hoot-release}
 
 echo "pea soup"
 
