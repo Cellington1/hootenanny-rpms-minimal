@@ -17,7 +17,6 @@ set -u
 # Set RPM macros for versions that are used in the container.
 run_hoot_build_image \
     -i $BUILD_IMAGE \
-    /bin/sh -c "git config -l && git config --global url."https://".insteadOf git:// && git config -l" \
     rpmbuild \
       --define "hoot_version_gen ${HOOT_VERSION_GEN}" \
       --define "geos_version %(rpm -q --queryformat '%%{version}' geos)" \
