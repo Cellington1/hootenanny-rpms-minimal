@@ -286,7 +286,7 @@ function run_hoot_build_image() {
                --entrypoint $entrypoint \
 	       -u $user \
 	       -i --rm \
-               -c 'git config -l && git config --global url."https://".insteadOf git:// && git config -l' \
+               -c 'git config -l' \
                $image "${@:-/bin/bash}"
     fi
 
