@@ -33,8 +33,10 @@ source conf/database/DatabaseConfig.sh
 
 # Perform the fortify make
 aclocal && autoconf && autoheader && automake --add-missing --copy && ./configure --quiet --with-rnd --with-services
+echo "Start Fortify"
+mvn sca:translate
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 make -j4
-
+echo "End Fortify"
 # Perform the scan
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -64 -Xmx24G -scan -f Hootenanny_Core_2018_4_23.fpr
 
@@ -43,15 +45,15 @@ aclocal && autoconf && autoheader && automake --add-missing --copy && ./configur
 ./scripts/copyright/UpdateAllCopyrightHeaders.sh
 
 # Make the archive.
-make -j$(nproc) clean
-make -j$(nproc) archive
+#make -j$(nproc) clean
+#make -j$(nproc) archive
 
 # Move the second maven run here, to see if we can get past the cache issue
-make -j$(nproc) archive
+#make -j$(nproc) archive
 
 # Copy in source archive to RPM sources.
 
-echo "Current location"
+e#cho "Current location"
 pwd
 
 cp -v hootenanny-[0-9]*.tar.gz /rpmbuild/SOURCES 
