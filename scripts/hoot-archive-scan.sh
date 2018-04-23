@@ -37,7 +37,7 @@ source conf/database/DatabaseConfig.sh
 make -j$(nproc) clean
 
 echo "Start Fortify"
-#mvn sca:translate
+mvn sca:translate
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 make -j$(nproc)
 echo "End Fortify"
 # Perform the scan
