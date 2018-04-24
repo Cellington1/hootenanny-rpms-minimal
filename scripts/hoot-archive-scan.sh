@@ -28,9 +28,9 @@ autoheader
 automake --add-missing --copy
 
 # Run configure, enable R&D, services, and PostgreSQL.
-./configure --quiet --with-rnd --with-services --with-postgresql
+./configure --quiet --with-rnd  --with-postgresql
 
-
+# --with-services
 # Update the license headers.
 ./scripts/copyright/UpdateAllCopyrightHeaders.sh
 
