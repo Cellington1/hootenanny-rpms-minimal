@@ -34,9 +34,7 @@ automake --add-missing --copy
 # Update the license headers.
 ./scripts/copyright/UpdateAllCopyrightHeaders.sh
 
-# make -j$(nproc) clean
-
-
+make -j$(nproc)
 
 echo "Start Fortify"
 
@@ -56,7 +54,7 @@ echo "End Fortify"
 
 # Copy in source archive to RPM sources.
 
-e#cho "Current location"
+#e#cho "Current location"
 pwd
 
 cp -v hootenanny-[0-9]*.tar.gz /rpmbuild/SOURCES 
