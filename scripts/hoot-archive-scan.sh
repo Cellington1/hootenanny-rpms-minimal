@@ -28,7 +28,7 @@ autoheader
 automake --add-missing --copy
 
 # Run configure, enable R&D, services, and PostgreSQL.
-./configure --quiet --with-rnd  --with-postgresql
+./configure --quiet --with-rnd --with-services 
 
 # --with-services
 # Update the license headers.
@@ -36,9 +36,12 @@ automake --add-missing --copy
 
 # make -j$(nproc) clean
 
+
+
 echo "Start Fortify"
-mvn sca:translate
+
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 make -j$(nproc)
+
 echo "End Fortify"
 # Perform the scan
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -64 -Xmx24G -scan -f Hootenanny_Core_2018_4_23.fpr
