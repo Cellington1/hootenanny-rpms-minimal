@@ -21,6 +21,10 @@ set -u
 
 source conf/database/DatabaseConfig.sh
 
+# Start postgres
+su-exec postgres pg_ctl -D /var/lib/pgsql/9.5/data -s start
+
+
 #Generate configure script.
 aclocal
 autoconf
