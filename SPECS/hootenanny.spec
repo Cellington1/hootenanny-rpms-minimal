@@ -35,7 +35,9 @@
 %{!?tomcat_basedir: %global tomcat_basedir %{_sharedstatedir}/tomcat8}
 %{!?tomcat_config: %global tomcat_config %{_sysconfdir}/tomcat8}
 %{!?tomcat_home: %global tomcat_home %{_datadir}/tomcat8}
+%{!?tomcat_logs: %global tomcat_logs %{_var}/log/tomcat8}
 %global tomcat_webapps %{tomcat_basedir}/webapps
+%global services_home %{tomcat_webapps}/hoot-services
 
 # NodeJS package includes an epoch that must be used for requirements.
 %{!?nodejs_epoch: %global nodejs_epoch 1}
@@ -203,6 +205,14 @@ export HOOT_HOME=%{hoot_home}
 export HOOT_WORKING_NAME=%{name}
 EOF
 
+# Add a dummy Tomcat log file, `catalina.out`, to prevent error popup in UI.
+%{__install} -d -m 0775 %{buildroot}%{tomcat_logs}
+%{__cat} >> %{buildroot}%{tomcat_logs}/catalina.out <<EOF
+Please login to the host to view the logs:
+
+   sudo journalctl -u tomcat8
+EOF
+
 # node-export
 %{__install} -d -m 0775 %{buildroot}%{hoot_home}/node-export-server
 %{__cp} -p node-export-server/*.{js,json} %{buildroot}%{hoot_home}/node-export-server
@@ -267,6 +277,7 @@ echo "export HOOT_HOME=%{hoot_home}" > %{buildroot}%{_sysconfdir}/profile.d/hoot
 # This allows all the tests to run.
 %{__install} -m 0775 -d %{buildroot}%{hoot_home}/hoot-core-test/src/test
 %{__ln_s} %{hoot_home}/test-files %{buildroot}%{hoot_home}/hoot-core-test/src/test/resources
+%{__chmod} 0664 %{buildroot}%{hoot_home}/test-files/DcTigerRoadsHighwayExactMatchInputs.osm
 
 # This makes it so HootEnv.sh resolves `$HOOT_HOME` properly.
 %{__ln_s} %{hoot_home}/bin/HootEnv.sh %{buildroot}%{_bindir}/HootEnv.sh
@@ -337,13 +348,13 @@ This package contains the UI and web services.
 
 %files services-ui
 %{_unitdir}/node-export.service
-%%if 0%{with_node_mapnik} == 1
+%if 0%{with_node_mapnik} == 1
 %{_unitdir}/node-mapnik.service
 %endif
 
 %defattr(-, root, tomcat, 0775)
 %{hoot_home}/node-export-server
-%%if 0%{with_node_mapnik} == 1
+%if 0%{with_node_mapnik} == 1
 %{hoot_home}/node-mapnik-server
 %endif
 %{hoot_home}/test-files
@@ -356,6 +367,7 @@ This package contains the UI and web services.
 %{hoot_home}/tmp
 %{hoot_home}/userfiles
 %{tomcat_home}/.deegree
+%{tomcat_logs}/catalina.out
 
 #the order of operations during an upgrade is:
 #
@@ -369,19 +381,19 @@ This package contains the UI and web services.
 %pre services-ui
 
 if [ "$1" = "2" ]; then
-    # Perform whatever maintenance must occur before the upgrade
+    # Stop tomcat8 service before removing the extracted war files.
+    systemctl stop tomcat8
 
     # Remove exploded hoot-services war remnants
-    SERVICES_HOME=%{tomcat_webapps}/hoot-services
-    if [ -d $SERVICES_HOME ]; then
-        rm -rf $SERVICES_HOME
+    if [ -d %{services_home} ]; then
+        rm -rf %{services_home}
     fi
 fi
 
-%preun
+%preun services-ui
 
 %systemd_preun node-export.service
-%%if 0%{with_node_mapnik} == 1
+%if 0%{with_node_mapnik} == 1
 %systemd_preun node-mapnik.service
 %endif
 
@@ -390,9 +402,29 @@ fi
 if test -f /.dockerenv; then exit 0; fi
 
 %systemd_post node-export.service
-%%if 0%{with_node_mapnik} == 1
+%if 0%{with_node_mapnik} == 1
 %systemd_post node-mapnik.service
 %endif
+
+function startTomcat() {
+    local count=0
+    local timeout=180
+    local deploy_pattern='org\.apache\.catalina\.startup\.HostConfig\.deployWAR Deployment of web application archive \[%{tomcat_webapps}/hoot-services.war\] has finished'
+    local start_time=$(date +'%%Y-%%m-%%d %%H:%%M:%%S')
+
+    systemctl start tomcat8
+
+    echo 'Waiting for Tomcat to start'
+    while ! journalctl --since "${start_time}" -u tomcat8 | grep -q -e "${deploy_pattern}"; do
+        sleep 1
+        count=$(expr $count + 1)
+        # Abort if we wait too long.
+        if [ "$(expr ${count} \>= ${timeout})" = "1" ]; then
+            echo "Timed out waiting for Tomcat to start."
+            break
+        fi
+    done
+}
 
 function updateConfigFiles () {
     # Check for existing db config from previous install and move to right location
@@ -417,18 +449,6 @@ function updateConfigFiles () {
         sed -i "s@<\/Host>@      <Context docBase=\""${HOOT_HOME//\//\\\/}"\/userfiles\/ingest\/processed\" path=\"\/static\" \/>\n      &@" $TOMCAT_SRV
     fi
 
-    # Allow linking in Tomcat context
-    TOMCAT_CTX=%{tomcat_config}/context.xml
-
-    # First, fix potential pre-existing setting of 'allowLinking' that doesn't work on tomcat8
-    sed -i "s@^<Context allowLinking=\"true\">@<Context>@" $TOMCAT_CTX
-
-    # Now, set allowLinking if needed
-    if ! grep -i --quiet 'allowLinking="true"' $TOMCAT_CTX; then
-        echo "Set allowLinking to true in Tomcat context"
-        sed -i "/<Context>/a \    <Resources allowLinking=\"true\" />" $TOMCAT_CTX
-    fi
-
     # Increase the Tomcat java heap size
     TOMCAT_CONF=%{tomcat_config}/tomcat8.conf
     if ! grep -i --quiet 'Xmx2048m' $TOMCAT_CONF; then
@@ -442,9 +462,9 @@ EOT
     fi
 
     # Update database credentials in various locations.
-    sed -i s/password\:\ hoottest/password\:\ $DB_PASSWORD/ %{tomcat_webapps}/hoot-services/WEB-INF/classes/db/liquibase.properties
-    sed -i s/DB_PASSWORD=hoottest/DB_PASSWORD=$DB_PASSWORD/ %{tomcat_webapps}/hoot-services/WEB-INF/classes/db/db.properties
-    sed -i s/\<Password\>hoottest\<\\/Password\>/\<Password\>$DB_PASSWORD\<\\/Password\>/ %{tomcat_webapps}/hoot-services/WEB-INF/workspace/jdbc/WFS_Connection.xml
+    sed -i s/password\:\ hoottest/password\:\ $DB_PASSWORD/ %{services_home}/WEB-INF/classes/db/liquibase.properties
+    sed -i s/DB_PASSWORD=hoottest/DB_PASSWORD=$DB_PASSWORD/ %{services_home}/WEB-INF/classes/db/db.properties
+    sed -i s/\<Password\>hoottest\<\\/Password\>/\<Password\>$DB_PASSWORD\<\\/Password\>/ %{services_home}/WEB-INF/workspace/jdbc/WFS_Connection.xml
 
     systemctl restart tomcat8
 }
@@ -457,9 +477,8 @@ function updateLiquibase () {
     fi
 
     # Apply any database schema changes
-    TOMCAT_HOME=%{tomcat_home}
     source %{hoot_home}/conf/database/DatabaseConfig.sh
-    cd $TOMCAT_HOME/webapps/hoot-services/WEB-INF
+    cd %{services_home}/WEB-INF
     liquibase --contexts=default,production \
         --changeLogFile=classes/db/db.changelog-master.xml \
         --promptForNonLocalDatabase=false \
@@ -477,7 +496,7 @@ if [ "$1" = "1" ]; then
     source /etc/profile.d/hootenanny.sh
 
     # start tomcat
-    systemctl start tomcat8
+    startTomcat
 
     # init and start postgres
     if [ ! -e /var/lib/pgsql/%{pg_version}/data/PG_VERSION ]; then
@@ -552,7 +571,9 @@ EOT
     rm -f /tmp/osmapidb.log
 
     systemctl start node-export.service
+%if 0%{with_node_mapnik} == 1
     systemctl start node-mapnik.service
+%endif
 
     updateConfigFiles
     updateLiquibase
@@ -572,6 +593,7 @@ elif [ "$1" = "2" ]; then
     source /etc/profile.d/hootenanny.sh
     source %{hoot_home}/conf/database/DatabaseConfig.sh
 
+    startTomcat
     updateConfigFiles
     updateLiquibase
 fi
@@ -581,7 +603,9 @@ fi
 if test -f /.dockerenv; then exit 0; fi
 
 %systemd_postun node-export.service
+%if 0%{with_node_mapnik} == 1
 %systemd_postun node-mapnik.service
+%endif
 
 if [ "$1" = "0" ]; then
     # Perform tasks to clean up after uninstallation
@@ -597,15 +621,13 @@ if [ "$1" = "0" ]; then
     done
 
     # Remove .deegree directory
-    TOMCAT_HOME=%{tomcat_home}
-    if [ -d $TOMCAT_HOME/.deegree ]; then
-        rm -rf $TOMCAT_HOME/.deegree
+    if [ -d %{tomcat_home}/.deegree ]; then
+        rm -rf %{tomcat_home}/.deegree
     fi
 
     # Remove exploded hoot-services war remnants
-    SERVICES_HOME=%{tomcat_webapps}/hoot-services
-    if [ -d $SERVICES_HOME ]; then
-        rm -rf $SERVICES_HOME
+    if [ -d %{services_home} ]; then
+        rm -rf %{services_home}
     fi
 
     systemctl start tomcat8
@@ -636,28 +658,37 @@ to run Hootenanny.
 
 if test -f /.dockerenv; then exit 0; fi
 
-# set Postgres to autostart
-systemctl enable postgresql-%{pg_version}
-# set Tomcat to autostart
-systemctl enable tomcat8
-# set NodeJS node-export-server to autostart
-systemctl enable node-export
-# set NodeJS node-mapnik-server to autostart
-systemctl enable node-mapnik
+if [ "$1" = "1" ]; then
+    # set Postgres to autostart
+    systemctl enable postgresql-%{pg_version}
+    # set Tomcat to autostart
+    systemctl enable tomcat8
+    # set NodeJS node-export-server to autostart
+    systemctl enable node-export
+%if 0%{with_node_mapnik} == 1
+    # set NodeJS node-mapnik-server to autostart
+    systemctl enable node-mapnik
+%endif
+fi
+
 
 
 %postun autostart
 
 if test -f /.dockerenv; then exit 0; fi
 
-# set Postgres to NOT autostart
-systemctl disable postgresql-%{pg_version}
-# set Tomcat to NOT autostart
-systemctl disable tomcat8
-# set NodeJS node-mapnik-server to NOT autostart
-systemctl disable node-export
-# set NodeJS node-export-server to NOT autostart
-systemctl disable node-mapnik
+if [ "$1" = "0" ]; then
+    # set Postgres to NOT autostart
+    systemctl disable postgresql-%{pg_version}
+    # set Tomcat to NOT autostart
+    systemctl disable tomcat8
+    # set NodeJS node-export-server to NOT autostart
+    systemctl disable node-export
+%if 0%{with_node_mapnik} == 1
+    # set NodeJS node-mapnik-server to NOT autostart
+    systemctl disable node-mapnik
+%endif
+fi
 
 
 %package services-devel-deps
