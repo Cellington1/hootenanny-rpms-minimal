@@ -38,23 +38,14 @@ automake --add-missing --copy
 # Update the license headers.
 ./scripts/copyright/UpdateAllCopyrightHeaders.sh
 
-
-# make -j$(nproc)
-echo "start postgres again"
-# Start postgres again
-su-exec postgres pg_ctl -D /var/lib/pgsql/9.5/data -s start
-
-echo "try psql"
-psql
-
 echo "Start Fortify"
 
 echo "Clean the compiled job"
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26 -clean
 
 
-echo "Compile hootenanny"
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26a  -logfile comp.log make -j$(nproc)
+# echo "Compile hootenanny"
+# /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26a  -logfile comp.log make -j$(nproc)
 
 echo "Compile hootenanny again"
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26  -logfile comp.log make -j$(nproc)
