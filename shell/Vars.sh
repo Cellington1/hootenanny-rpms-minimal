@@ -1,10 +1,10 @@
-# The rpm-build apt package is required when on Ubuntu because we treat the
+# The rpm apt package is required when on Ubuntu because we treat the
 # *.spec files as a source of truth for version information and
 # `rpm` and `rpmspec` are necessary to intrepret them from macros.
-if ! test -x /usr/bin/rpmbuild; then
-    echo "This script requires the 'rpm' package (Ubuntu) or 'rpm-build' (CentOS)"
-    exit 1
-fi
+#if ! test -x /usr/bin/rpm; then
+#    echo "This script requires the 'rpm' package."
+#    exit 1
+#fi
 
 ## Important variables needed for functions.
 SCRIPT_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
@@ -17,11 +17,20 @@ RPMS=$SCRIPT_HOME/RPMS
 CACHE=$SCRIPT_HOME/cache
 HOOT=$SCRIPT_HOME/hootenanny
 
+# Test function
+
+myfunction(){
+    echo "My function works!"
+}
+myfunction
+
 ## Utility functions.
 
 function latest_hoot_archive() {
     echo $(ls -1t $SOURCES/hootenanny-[0-9]*.tar.gz | head -n1)
 }
+
+#latest_hoot_archive
 
 # Returns the output of Hootenanny's `HOOT_VERSION_GEN`, embedded
 # in the archive's filename.
@@ -30,6 +39,10 @@ function latest_hoot_version_gen() {
     local hoot_version_gen=${hoot_archive##$SOURCES/hootenanny-}
     echo ${hoot_version_gen%%.tar.gz}
 }
+
+
+# Test function
+latest_hoot_version_gen
 
 # Get version from YAML file.
 function config_version() {
@@ -150,19 +163,19 @@ function build_base_images() {
            --build-arg rpmbuild_dist=$RPMBUILD_DIST \
            --build-arg rpmbuild_uid=$(id -u) \
            -f $SCRIPT_HOME/docker/Dockerfile.rpmbuild \
-           -t hootenanny/rpmbuild \
+            -t  hootenanny/rpmbuild \
            $SCRIPT_HOME
 
     # Base image that has basic development and RPM building packages.
     docker build \
        -f $SCRIPT_HOME/docker/Dockerfile.rpmbuild-base \
-       -t hootenanny/rpmbuild-base \
+        -t hootenanny/rpmbuild-base \
        $SCRIPT_HOME
 
     # Generic image for building RPMS without any other prerequisites.
     docker build \
            -f $SCRIPT_HOME/docker/Dockerfile.rpmbuild-generic \
-           -t hootenanny/rpmbuild-generic \
+           -t  hootenanny/rpmbuild-generic \
            $SCRIPT_HOME
 
     # Base image with PostgreSQL develop libraries from PGDG at the
@@ -170,7 +183,7 @@ function build_base_images() {
     docker build \
            --build-arg pg_version=$PG_VERSION \
            -f $SCRIPT_HOME/docker/Dockerfile.rpmbuild-pgdg \
-           -t hootenanny/rpmbuild-pgdg:$PG_VERSION \
+           -t  hootenanny/rpmbuild-pgdg:$PG_VERSION \
            $SCRIPT_HOME
 }
 
@@ -178,7 +191,7 @@ function build_base_images() {
 function build_repo_images() {
     docker build \
            -f $SCRIPT_HOME/docker/Dockerfile.rpmbuild-repo \
-           -t hootenanny/rpmbuild-repo \
+            -t hootenanny/rpmbuild-repo \
            $SCRIPT_HOME
 }
 
@@ -186,7 +199,7 @@ function build_run_images() {
     docker build \
            --build-arg pg_version=$PG_VERSION \
            -f $SCRIPT_HOME/docker/Dockerfile.run-base \
-           -t hootenanny/run-base \
+            -t hootenanny/run-base \
            $SCRIPT_HOME
 }
 
@@ -235,7 +248,7 @@ function run_dep_image() {
                -v $SPECS:/rpmbuild/SPECS:ro \
                -v $RPMS:/rpmbuild/RPMS:rw \
                -u $user \
-               -it --rm \
+               -i --rm \
                $image "$@"
     fi
 }
@@ -244,7 +257,7 @@ function run_dep_image() {
 function run_hoot_build_image() {
     local OPTIND opt
     local entrypoint=/docker-entrypoint.sh
-    local image=hootenanny/rpmbuild-hoot-release
+    local image=cellington1/rpmbuild-hoot-release
     local sources_mode=ro
     local user=root
     local usage=no
@@ -284,8 +297,11 @@ function run_hoot_build_image() {
                -v $CACHE/npm:/rpmbuild/.npm:rw \
                -v $SCRIPT_HOME/scripts:/rpmbuild/scripts:ro \
                --entrypoint $entrypoint \
-               -u $user \
-               -it --rm \
-               $image "${@:-/bin/bash}"
+	       -u $user \
+	       -i --rm \
+               $image "${@:-/bin/bash}" 
+              
     fi
+
+
 }

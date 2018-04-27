@@ -21,28 +21,52 @@ set -u
 
 source conf/database/DatabaseConfig.sh
 
-# Generate configure script.
+# Start postgres
+su-exec postgres pg_ctl -D /var/lib/pgsql/9.5/data -s start
+
+
+#Generate configure script.
 aclocal
 autoconf
 autoheader
 automake --add-missing --copy
 
 # Run configure, enable R&D, services, and PostgreSQL.
-./configure --quiet --with-rnd --with-services --with-postgresql
+./configure --quiet --with-rnd --with-services 
 
+# --with-services
 # Update the license headers.
 ./scripts/copyright/UpdateAllCopyrightHeaders.sh
 
+echo "Start Fortify"
+
+echo "Clean the compiled job"
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26 -clean
+
+
+# echo "Compile hootenanny"
+# /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26a  -logfile comp.log make -j$(nproc)
+
+echo "Compile hootenanny again"
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26  -logfile comp.log make -j$(nproc)
+
+# cat comp.log
+
+echo "Scan hootenanny"
+# Perform the scan
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26 -64 -Xmx24G -logfile scan.log -scan -f Hootenanny_Core_2018_4_26.fpr
+
+# cat scan.log
 # Make the archive.
-make -j$(nproc) clean
-make -j$(nproc) archive
+#make -j$(nproc) clean
+#make -j$(nproc) archive
 
 # Move the second maven run here, to see if we can get past the cache issue
-make -j$(nproc) archive
+#make -j$(nproc) archive
 
 # Copy in source archive to RPM sources.
 
-echo "Current location"
+#e#cho "Current location"
 pwd
 
 cp -v hootenanny-[0-9]*.tar.gz /rpmbuild/SOURCES 

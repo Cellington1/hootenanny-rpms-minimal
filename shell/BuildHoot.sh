@@ -1,10 +1,10 @@
 #!/bin/bash
-set -euo pipefail
+set -euox pipefail
 
 ## Get variables.
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/Vars.sh
 
-BUILD_IMAGE=${BUILD_IMAGE:-hootenanny/rpmbuild-hoot-release}
+BUILD_IMAGE=${BUILD_IMAGE:-cellington1/rpmbuild-hoot-release}
 
 set +u
 if [ -z $1 ]; then
@@ -25,4 +25,6 @@ run_hoot_build_image \
       --define "nodejs_version %(rpm -q --queryformat '%%{version}' nodejs)" \
       --define "stxxl_version %(rpm -q --queryformat '%%{version}' stxxl)" \
       --define "tomcat_version %(rpm -q --queryformat '%%{version}' tomcat8)" \
-      -bb SPECS/hootenanny.spec
+      -bb SPECS/hootenanny.spec \
+
+ 

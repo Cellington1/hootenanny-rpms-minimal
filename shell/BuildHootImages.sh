@@ -46,7 +46,7 @@ case "${BUILD_IMAGE}" in
                --build-arg nodejs_version=$NODEJS_VERSION-$NODEJS_RELEASE \
                --build-arg pg_version=$PG_VERSION \
                -f $SCRIPT_HOME/docker/Dockerfile.rpmbuild-hoot-release \
-               -t hootenanny/rpmbuild-hoot-release \
+               -t Cellington1/rpmbuild-hoot-release \
                $SCRIPT_HOME
         ;;
     *)
