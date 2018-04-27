@@ -51,9 +51,9 @@ echo "Compile"
 
 echo "Scan"
 # Perform the scan
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -64 -Xmx24G -scan -f Hootenanny_Core_2018_4_23.fpr
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -64 -Xmx24G  -debug -logfile scan.log -scan -f Hootenanny_Core_2018_4_23.fpr
 
-
+cat scan.log
 # Make the archive.
 #make -j$(nproc) clean
 #make -j$(nproc) archive
