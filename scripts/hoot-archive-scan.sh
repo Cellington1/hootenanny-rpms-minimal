@@ -68,7 +68,8 @@ echo "Scan hootenanny"
 
 #e#cho "Current location"
 pwd
-
+# Copy fpr to mounted volume
+cp /root/hootenanny/Hootenanny_Core_2018_4_27.fpr /mnt
 cp -v hootenanny-[0-9]*.tar.gz /rpmbuild/SOURCES 
 ls -la
 pwd
