@@ -40,23 +40,32 @@ automake --add-missing --copy
 
 
 # make -j$(nproc)
+echo "start postgres again"
+# Start postgres again
+su-exec postgres pg_ctl -D /var/lib/pgsql/9.5/data -s start
+
+echo "try psql"
+psql
 
 echo "Start Fortify"
 
 echo "Clean the compiled job"
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -clean
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26 -clean
 
 
-echo "Compile"
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -debug -verbose -logfile comp.log make -j$(nproc)
+echo "Compile hootenanny"
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26a  -logfile comp.log make -j$(nproc)
 
-cat comp.log
+echo "Compile hootenanny again"
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26  -logfile comp.log make -j$(nproc)
 
-echo "Scan"
+# cat comp.log
+
+echo "Scan hootenanny"
 # Perform the scan
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -64 -Xmx24G  -debug -verbose -logfile scan.log -scan -f Hootenanny_Core_2018_4_23.fpr
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26 -64 -Xmx24G -logfile scan.log -scan -f Hootenanny_Core_2018_4_26.fpr
 
-cat scan.log
+# cat scan.log
 # Make the archive.
 #make -j$(nproc) clean
 #make -j$(nproc) archive
