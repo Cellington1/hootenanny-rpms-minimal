@@ -38,7 +38,8 @@ automake --add-missing --copy
 # Update the license headers.
 ./scripts/copyright/UpdateAllCopyrightHeaders.sh
 
-make -j$(nproc)
+
+# make -j$(nproc)
 
 echo "Start Fortify"
 
