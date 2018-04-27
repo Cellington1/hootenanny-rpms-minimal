@@ -42,16 +42,14 @@ make -j$(nproc)
 
 echo "Start Fortify"
 
+echo "Clean the compiled job"
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -clean
+
+
+echo "Compile"
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 make -j$(nproc)
 
-# Look for files
-ls -la 
-# Look for nst file
-find / -iname '*.nst'
-# echo "Run Translate before scan"
-# mvn sca:translate
-
-echo "End Fortify"
+echo "Scan"
 # Perform the scan
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -64 -Xmx24G -scan -f Hootenanny_Core_2018_4_23.fpr
 
