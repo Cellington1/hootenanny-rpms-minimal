@@ -47,7 +47,9 @@ echo "Clean the compiled job"
 
 
 echo "Compile"
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 make -j$(nproc)
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 -debug -logfile comp.log make -j$(nproc)
+
+cat comp.log
 
 echo "Scan"
 # Perform the scan
