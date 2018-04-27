@@ -44,8 +44,12 @@ echo "Start Fortify"
 
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_23 make -j$(nproc)
 
-echo "Run Translate before scan"
-mvn sca:translate
+# Look for files
+ls -la 
+# Look for nst file
+find / -iname '*.nst'
+# echo "Run Translate before scan"
+# mvn sca:translate
 
 echo "End Fortify"
 # Perform the scan
