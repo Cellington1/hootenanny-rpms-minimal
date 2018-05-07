@@ -47,6 +47,18 @@ echo "Clean the compiled job"
 # echo "Compile hootenanny"
 # /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26a  -logfile comp.log make -j$(nproc)
 
+# Setup dummy files
+mkdir -p tmp/release
+touch tmp/release/HootSwig
+touch tmp/release/HootRnd
+touch tmp/release/HootHadoop
+touch tmp/release/HootCoreTest
+touch tmp/release/HootCmd
+touch tmp/release/HootCore
+touch tmp/release/HootTest
+touch tmp/release/HootJS
+
+
 echo "Compile hootenanny"
 /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_27  make -j$(nproc)
 
