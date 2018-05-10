@@ -41,20 +41,20 @@ automake --add-missing --copy
 echo "Start Fortify"
 
 echo "Clean the compiled job"
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26 -clean
+/opt/hp_fortify_sca/bin/sourceanalyzer -b Hootenanny_Core_2018_ATO -clean
 
 
 # echo "Compile hootenanny"
-# /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26a  -logfile comp.log make -j$(nproc)
+# /opt/hp_fortify_sca/bin/sourceanalyzer -b Hootenanny_Core_2018_ATO  -logfile comp.log make -j$(nproc)
 
 echo "Compile hootenanny again"
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26  -logfile comp.log make -j$(nproc)
+/opt/hp_fortify_sca/bin/sourceanalyzer -b Hootenanny_Core_2018_ATO  -logfile comp.log make -j$(nproc)
 
 # cat comp.log
 
 echo "Scan hootenanny"
 # Perform the scan
-/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26 -64 -Xmx24G -logfile scan.log -scan -f Hootenanny_Core_2018_4_26.fpr
+/opt/hp_fortify_sca/bin/sourceanalyzer -b Hootenanny_Core_2018_ATO -64 -Xmx24G -logfile scan.log -scan -f Hootenanny_Core_2018_ATO.fpr
 
 # cat scan.log
 # Make the archive.
