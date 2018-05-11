@@ -41,33 +41,35 @@ automake --add-missing --copy
 echo "Start Fortify"
 
 echo "Clean the compiled job"
-/opt/hp_fortify_sca/bin/sourceanalyzer -b Hootenanny_Core_2018_ATO -clean
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_ATO -clean
 
 
 # echo "Compile hootenanny"
-# /opt/hp_fortify_sca/bin/sourceanalyzer -b Hootenanny_Core_2018_ATO  -logfile comp.log make -j$(nproc)
+# /opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_4_26a  -logfile comp.log make -j$(nproc)
 
-echo "Compile hootenanny again"
-/opt/hp_fortify_sca/bin/sourceanalyzer -b Hootenanny_Core_2018_ATO  -logfile comp.log make -j$(nproc)
+# Setup dummy files
+mkdir -p tmp/release
+touch tmp/release/HootSwig
+touch tmp/release/HootRnd
+touch tmp/release/HootHadoop
+touch tmp/release/HootCoreTest
+touch tmp/release/HootCmd
+touch tmp/release/HootCore
+touch tmp/release/HootTest
+touch tmp/release/HootJS
+
+
+echo "Compile hootenanny"
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_ATO  make -j$(nproc)
 
 # cat comp.log
 
 echo "Scan hootenanny"
 # Perform the scan
-/opt/hp_fortify_sca/bin/sourceanalyzer -b Hootenanny_Core_2018_ATO -64 -Xmx24G -logfile scan.log -scan -f Hootenanny_Core_2018_ATO.fpr
+/opt/hp_fortify_sca/bin/sourceanalyzer -b hootenanny_2018_ATO -64 -Xmx24G -scan -f hootenanny_2018_ATO.fpr
 
-# cat scan.log
-# Make the archive.
-#make -j$(nproc) clean
-#make -j$(nproc) archive
-
-# Move the second maven run here, to see if we can get past the cache issue
-#make -j$(nproc) archive
-
-# Copy in source archive to RPM sources.
-
-#e#cho "Current location"
-pwd
+# Copy fpr to mounted volume
+cp /root/hootenanny/hootenanny_2018_ATO.fpr /mnt
 
 cp -v hootenanny-[0-9]*.tar.gz /rpmbuild/SOURCES 
 ls -la
